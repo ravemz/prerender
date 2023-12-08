@@ -14,8 +14,7 @@
     "compression": "^1.7.4",
     "express": "^4.17.1",
     "he": "^1.2.0",
-    "prerender-memory-cache": "^1.0.2",
-    "prerender-redis-cache": "^0.2.2",
+    "redis": "^2.8.0",
     "uuid": "^8.3.2",
     "valid-url": "^1.0.9"
   },
