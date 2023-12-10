@@ -1,71 +1,62 @@
+const axios = require("axios");
+const arg_parser = require("args-parser");
+
+// process .env file
 require("dotenv").config();
-
-const args = require("args-parser")(process.argv);
-console.log(args);
-const sitemap_url = args["sitemap-url"];
-const api_rate_limit = args["api-rate-limit"] || 500;
-
-var REDIS_URL =
-  process.env.REDISTOGO_URL ||
-  process.env.REDISCLOUD_URL ||
-  process.env.REDISGREEN_URL ||
-  process.env.REDIS_URL ||
-  "redis://127.0.0.1:6379";
-
-var url = require("url");
-var TTL = process.env.PAGE_TTL || 86400;
-
-// Parse out the connection vars from the env string.
-var connection = url.parse(REDIS_URL);
-var redis = require("redis");
-var client = redis.createClient(connection.port, connection.hostname);
-
-if (connection.auth) {
-  client.auth(connection.auth.split(":")[1]);
+const prerender_url = process.env.PRERENDER_URL;
+if (!prerender_url) {
+    console.error("PRERENDER_URL not set in .env file");
+    process.exit(1);
 }
 
-connection.path = (connection.pathname || "/").slice(1);
-connection.database = connection.path.length ? connection.path : "0";
-client.select(connection.database);
+// parse arguments
+const args = arg_parser(process.argv);
+const {
+    ["sitemap-url"]: sitemap_url,
+    ["api-rate-limit"]: api_rate_limit = 500,
+    ["1"]: single_url = undefined,
+} = args;
 
-client.on("error", function (error) {
-  console.warn("Redis Cache Error: " + error);
-});
+if (single_url) {
+    refreshCacheForUrl(single_url);
+} else if (sitemap_url) {
+    refreshCacheForSitemap(sitemap_url);
+} else {
+    console.error("No sitemap url or single url provided");
+    process.exit(1);
+}
 
-const axios = require("axios");
-client.on("ready", async function () {
-  console.log("redis client connected");
+async function refreshCacheForSitemap(sitemap_url) {
+    const Sitemapper = require("sitemapper");
+    const sitemap = new Sitemapper();
 
-  const Sitemapper = require("sitemapper");
-  const sitemap = new Sitemapper();
-  const { sites, errors } = await sitemap.fetch(sitemap_url);
-  console.log(
-    "refreshing cache for " +
-      sites.length +
-      " urls from sitemap located at " +
-      sitemap_url
-  );
-  for (let i = 0; i < sites.length / api_rate_limit; i++) {
-    sites.slice(i * api_rate_limit, (i + 1) * api_rate_limit).map((url) => {
-      client.del(url);
-      console.log("refreshing " + url);
-      axios.get(url, {
-        headers: {
-          "User-Agent":
-            "Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko; compatible; Googlebot/2.1; +http://www.google.com/bot.html) Chrome/W.X.Y.Z Safari/537.36",
-        },
-      });
+    console.log("fetching sitemap from", sitemap_url);
+    const { sites, errors } = await sitemap.fetch(sitemap_url);
+    console.error("faced errors:", errors);
+
+    console.log(
+        "refreshing cache for",
+        sites.length,
+        "urls from sitemap located at",
+        sitemap_url
+    );
+
+    for (let i = 0; i < sites.length / api_rate_limit; i++) {
+        await Promise.all(
+            sites
+                .slice(i * api_rate_limit, (i + 1) * api_rate_limit)
+                .map(refreshCacheForUrl)
+        );
+        // wait for 1min after api_rate_limit calls
+        await new Promise((resolve) => setTimeout(resolve, 1000 * 60));
+    }
+}
+
+async function refreshCacheForUrl(url) {
+    console.log("refreshing cache for", url);
+    return await axios({
+        url: prerender_url + "/render",
+        method: "post",
+        data: { url },
     });
-    // wait for 1min after api_rate_limit calls
-    await new Promise((resolve) => setTimeout(resolve, 1000 * 60));
-  }
-
-  console.log("faced errors:", errors);
-});
-
-client.on("end", function () {
-  redisOnline = false;
-  console.warn(
-    "Redis Cache Conncetion Closed. Will now bypass redis until it's back."
-  );
-});
+}

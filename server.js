@@ -1,14 +1,16 @@
 #!/usr/bin/env node
-var prerender = require('./lib');
+var prerender = require("./lib");
 
 // set env variables
-process.env['ALLOWED_DOMAINS'] = "lessonpal.com,staging.lessonpal.com,dev.lessonpal.com,test.lessonpal.com,temp.lessonpal.com,localhost"
+process.env["ALLOWED_DOMAINS"] =
+    "lessonpal.com,staging.lessonpal.com,dev.lessonpal.com,test.lessonpal.com,temp.lessonpal.com,localhost";
 
 var server = prerender({
-	// pageDoneCheckInterval: 5000,
-	// waitAfterLastRequest: 5000,
-	// parseShadowDom: true,
-	// logRequests: true
+    // pageDoneCheckInterval: 5000,
+    // waitAfterLastRequest: 5000,
+    // parseShadowDom: true,
+    // logRequests: true
+    chromeLocation: "/usr/bin/google-chrome-stable",
 });
 
 server.use(prerender.whitelist());
