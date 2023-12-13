@@ -6,8 +6,9 @@ var server = prerender({
     // pageDoneCheckInterval: 5000,
     // waitAfterLastRequest: 5000,
     // parseShadowDom: true,
-    // logRequests: true
+    // logRequests: true,
     chromeLocation: process.env.CHROME_LOCATION,
+    pageLoadTimeout: 30 * 1000,
 });
 
 server.use(prerender.whitelist());
