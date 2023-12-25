@@ -1,3 +1,5 @@
+const util = require('./lib/util.js');
+
 const axios = require("axios");
 const arg_parser = require("args-parser");
 
@@ -15,6 +17,7 @@ const {
     ["sitemap-url"]: sitemap_url,
     ["api-rate-limit"]: api_rate_limit = 10,
     ["1"]: single_url = undefined,
+    ["method"]: http_method = 'post',
 } = args;
 
 if (single_url) {
@@ -52,13 +55,20 @@ async function refreshCacheFromArray(sites) {
 }
 
 async function refreshCacheForUrl(url) {
-    console.log("refreshing cache for: ", url);
+    util.log("refreshing cache for: ", url);
     try {
-      return await axios({
-          url: prerender_url + "/render",
-          method: "post",
-          data: { url },
-      });
+      if (http_method == 'post') {
+        return await axios({
+            url: prerender_url + "/render",
+            method: "post",
+            data: { url },
+        });
+      } else {
+        return await axios({
+            url: prerender_url + "/" + url,
+            method: "get",
+        });
+      }
     } catch (err) {
       console.error("error for url: "+url, err.message);
     }
