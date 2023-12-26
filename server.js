@@ -8,7 +8,7 @@ var server = prerender({
     // parseShadowDom: true,
     // logRequests: true,
     chromeLocation: process.env.CHROME_LOCATION,
-    // pageLoadTimeout: 30 * 1000,
+    pageLoadTimeout: 30 * 1000,
 });
 
 server.use(prerender.whitelist());

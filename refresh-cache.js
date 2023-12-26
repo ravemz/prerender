@@ -33,7 +33,7 @@ async function refreshCacheForSitemap(sitemap_url) {
     const Sitemapper = require("sitemapper");
     const sitemap = new Sitemapper();
 
-    console.log("fetching sitemap from: ", sitemap_url);
+    util.log("fetching sitemap from: ", sitemap_url);
     const { sites, errors } = await sitemap.fetch(sitemap_url);
     console.error("faced errors: ", errors);
 
@@ -41,7 +41,7 @@ async function refreshCacheForSitemap(sitemap_url) {
 }
 
 async function refreshCacheFromArray(sites) {
-    console.log("refreshing cache for: ", sites.length, " urls");
+    util.log("refreshing cache for: ", sites.length, " urls");
 
     for (let i = 0; i < sites.length / api_rate_limit; i++) {
         await Promise.all(
