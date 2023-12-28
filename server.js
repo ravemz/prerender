@@ -14,7 +14,7 @@ var server = prerender({
 server.use(prerender.whitelist());
 // server.use(prerender.sendPrerenderHeader());
 server.use(prerender.browserForceRestart());
-// server.use(prerender.blockResources());
+server.use(prerender.blockResources());
 server.use(prerender.addMetaTags());
 server.use(prerender.updateStyleTags());
 server.use(prerender.removeScriptTags());
