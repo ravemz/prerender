@@ -18,6 +18,7 @@ const {
     ["api-rate-limit"]: api_rate_limit = 10,
     ["1"]: single_url = undefined,
     ["method"]: http_method = 'post',
+    ["offset"]: offset = 0,
 } = args;
 
 if (single_url) {
@@ -41,9 +42,10 @@ async function refreshCacheForSitemap(sitemap_url) {
 }
 
 async function refreshCacheFromArray(sites) {
-    util.log("refreshing cache for: ", sites.length, " urls");
-
-    for (let i = 0; i < sites.length / api_rate_limit; i++) {
+    util.log("refreshing cache for: ", sites.length, " urls and offset: ", offset);
+    
+    for (let i = offset; i < sites.length / api_rate_limit; i++) {
+	util.log(i);
         await Promise.all(
             sites
                 .slice(i * api_rate_limit, (i + 1) * api_rate_limit)
